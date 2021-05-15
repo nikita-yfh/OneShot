@@ -1107,6 +1107,11 @@ if __name__ == '__main__':
         help='Verbose output'
         )
     parser.add_argument(
+        '-k', '--kill',
+        action='store_true',
+        help='Kill wpa_supplicant'
+        )
+    parser.add_argument(
         '--vuln-list',
         type=str,
         default=os.path.dirname(os.path.realpath(__file__)) + '/vulnwsc.txt',
@@ -1124,12 +1129,14 @@ if __name__ == '__main__':
         )
 
     args = parser.parse_args()
-
     if sys.hexversion < 0x03060F0:
         die("The program requires Python 3.6 and above")
     if os.getuid() != 0:
         die("Run it as root")
 
+    if args.kill:
+        for count in range (0,50):
+            os.system("pkill wpa_supplicant")
     if not ifaceUp(args.interface):
         die('Unable to up interface "{}"'.format(args.interface))
 
