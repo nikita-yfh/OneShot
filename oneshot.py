@@ -1147,6 +1147,7 @@ if __name__ == '__main__':
                     with open(args.vuln_list, 'r', encoding='utf-8') as file:
                         vuln_list = file.read().splitlines()
                 except FileNotFoundError:
+                    print("[-] Warning: vuln list not found")
                     vuln_list = []
                 scanner = WiFiScanner(args.interface, vuln_list)
                 if not args.loop:
