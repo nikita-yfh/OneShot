@@ -962,31 +962,39 @@ class WiFiScanner():
                 network['Security type'], network['Level'],
                 deviceName, model
                 )
+            network['Vulnerable']=False
             if (network['BSSID'], network['ESSID']) in self.stored:
                 print(colored(line, color='yellow'))
             elif network['WPS locked']:
                 print(colored(line, color='red'))
             elif self.vuln_list and (model in self.vuln_list):
                 print(colored(line, color='green'))
+                network['Vulnerable']=True
             else:
                 print(line)
 
         return networks
 
-    def prompt_network(self):
+    def prompt_network(self,auto=False):
         networks = self.iw_scanner()
         if not networks:
             print('[-] No WPS networks found.')
             return
         while 1:
             try:
-                networkNo = input('Select target (press Enter to refresh): ')
-                if networkNo.lower() in ('r', '0', ''):
+                if auto==True:
+                    for network in networks:
+                        if network['Vulnerable']==True and not (network['BSSID'], network['ESSID']) in self.stored:
+                            return network['BSSID']
                     return self.prompt_network()
-                elif int(networkNo) in range(1, len(networks) + 1):
-                    return networks[int(networkNo) - 1]['BSSID']
                 else:
-                    raise IndexError
+                    networkNo = input('Select target (press Enter to refresh): ')
+                    if networkNo.lower() in ('r', '0', ''):
+                        return self.prompt_network()
+                    elif int(networkNo) in range(1, len(networks) + 1):
+                        return networks[int(networkNo) - 1]['BSSID']
+                    else:
+                        raise IndexError
             except Exception:
                 print('Invalid number')
             else:
@@ -1110,6 +1118,11 @@ if __name__ == '__main__':
         '-k', '--kill',
         action='store_true',
         help='Kill wpa_supplicant'
+    )
+    parser.add_argument(
+        '-a', '--auto',
+        action='store_true',
+        help='Automatic atack'
         )
     parser.add_argument(
         '--vuln-list',
@@ -1152,7 +1165,10 @@ if __name__ == '__main__':
                 scanner = WiFiScanner(args.interface, vuln_list)
                 if not args.loop:
                     print('[*] BSSID not specified (--bssid) — scanning for available networks')
-                args.bssid = scanner.prompt_network()
+                if args.auto:
+                    args.bssid = scanner.prompt_network(True)
+                else:
+                    args.bssid = scanner.prompt_network(False)
 
             if args.bssid:
                 companion = Companion(args.interface, args.write, print_debug=args.verbose)
