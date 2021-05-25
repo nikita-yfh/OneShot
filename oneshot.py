@@ -986,7 +986,7 @@ class WiFiScanner():
                     for network in networks:
                         if network['Vulnerable']==True and not (network['BSSID'], network['ESSID']) in self.stored:
                             return network['BSSID']
-                    return self.prompt_network()
+                    return self.prompt_network(True)
                 else:
                     networkNo = input('Select target (press Enter to refresh): ')
                     if networkNo.lower() in ('r', '0', ''):
