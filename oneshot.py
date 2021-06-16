@@ -654,7 +654,7 @@ class Companion():
         return False
 
     def single_connection(self, bssid, pin=None, pixiemode=False, showpixiecmd=False,
-                          pixieforce=False, store_pin_on_fail=False,timeout=0):
+                          pixieforce=False, store_pin_on_fail=False,timeout=0,auto=False):
         if not pin:
             if pixiemode:
                 try:
@@ -662,8 +662,9 @@ class Companion():
                     filename = self.pixiewps_dir + '{}.run'.format(bssid.replace(':', '').upper())
                     with open(filename, 'r') as file:
                         t_pin = file.readline().strip()
-                        if input('[?] Use previous calculated PIN {}? [n/Y] '.format(t_pin)).lower() != 'n':
-                            pin = t_pin
+                        if type(t_pin) == int:
+                            if auto or input('[?] Use previous calculated PIN {}? [n/Y] '.format(t_pin)).lower() != 'n':
+                                pin = t_pin
                         else:
                             raise FileNotFoundError
                 except FileNotFoundError:
@@ -697,7 +698,7 @@ class Companion():
             if self.pixie_creds.got_all():
                 pin = self.__runPixiewps(showpixiecmd, pixieforce)
                 if pin:
-                    return self.single_connection(bssid, pin, pixiemode=False, store_pin_on_fail=True)
+                    return self.single_connection(bssid, pin, pixiemode=False, store_pin_on_fail=True,auto=auto)
                 return False
             else:
                 print('[!] Not enough data to run Pixie Dust attack')
@@ -1185,7 +1186,7 @@ if __name__ == '__main__':
                     companion.smart_bruteforce(args.bssid, args.pin, args.delay)
                 else:
                     companion.single_connection(args.bssid, args.pin, args.pixie_dust,
-                                                args.show_pixie_cmd, args.pixie_force,timeout=args.timeout)
+                                                args.show_pixie_cmd, args.pixie_force,timeout=args.timeout,auto=args.auto)
             if not args.loop:
                 break
             else:
