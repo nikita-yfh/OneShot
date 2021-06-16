@@ -638,7 +638,8 @@ class Companion():
 
         while True:
             if timeout > 0 and time.time() > start_time + timeout:
-                break
+                print("\nTimeout exceeded")
+                return False
             res = self.__handle_wpas(pixiemode=pixiemode, verbose=verbose)
             if not res:
                 break
