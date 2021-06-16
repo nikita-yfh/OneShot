@@ -622,7 +622,8 @@ class Companion():
             return None
         return pin
 
-    def __wps_connection(self, bssid, pin, pixiemode=False, verbose=None):
+    def __wps_connection(self, bssid, pin, pixiemode=False, verbose=None,timeout=0):
+        start_time=time.time()
         if not verbose:
             verbose = self.print_debug
         self.pixie_creds.clear()
@@ -636,6 +637,8 @@ class Companion():
             return False
 
         while True:
+            if timeout > 0 and time.time() > start_time + timeout:
+                break
             res = self.__handle_wpas(pixiemode=pixiemode, verbose=verbose)
             if not res:
                 break
@@ -650,7 +653,7 @@ class Companion():
         return False
 
     def single_connection(self, bssid, pin=None, pixiemode=False, showpixiecmd=False,
-                          pixieforce=False, store_pin_on_fail=False):
+                          pixieforce=False, store_pin_on_fail=False,timeout=0):
         if not pin:
             if pixiemode:
                 try:
@@ -670,13 +673,13 @@ class Companion():
 
         if store_pin_on_fail:
             try:
-                self.__wps_connection(bssid, pin, pixiemode)
+                self.__wps_connection(bssid, pin, pixiemode, None, timeout)
             except KeyboardInterrupt:
                 print("\nAborting…")
                 self.__savePin(bssid, pin)
                 return False
         else:
-            self.__wps_connection(bssid, pin, pixiemode)
+            self.__wps_connection(bssid, pin, pixiemode, None, timeout)
 
         if self.connection_status.status == 'GOT_PSK':
             self.__credentialPrint(pin, self.connection_status.wpa_psk, self.connection_status.essid)
@@ -1100,6 +1103,11 @@ if __name__ == '__main__':
         help='Set the delay between pin attempts'
         )
     parser.add_argument(
+        '-t', '--timeout',
+        type=float,
+        help="Timeout of atack in seconds"
+        )
+    parser.add_argument(
         '-w', '--write',
         action='store_true',
         help='Write credentials to the file on success'
@@ -1176,7 +1184,7 @@ if __name__ == '__main__':
                     companion.smart_bruteforce(args.bssid, args.pin, args.delay)
                 else:
                     companion.single_connection(args.bssid, args.pin, args.pixie_dust,
-                                                args.show_pixie_cmd, args.pixie_force)
+                                                args.show_pixie_cmd, args.pixie_force,timeout=args.timeout)
             if not args.loop:
                 break
             else:
